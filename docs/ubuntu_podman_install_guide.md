@@ -22,14 +22,6 @@ sudo nano /etc/apt/sources.list
 
 根据您的Ubuntu版本，替换为相应的阿里云源：
 
-**Ubuntu 24.10 (plucky)**：
-```bash
-deb http://mirrors.aliyun.com/ubuntu/ plucky main restricted universe multiverse
-deb http://mirrors.aliyun.com/ubuntu/ plucky-security main restricted universe multiverse
-deb http://mirrors.aliyun.com/ubuntu/ plucky-updates main restricted universe multiverse
-deb http://mirrors.aliyun.com/ubuntu/ plucky-backports main restricted universe multiverse
-```
-
 **Ubuntu 22.04 LTS (jammy)**：
 ```bash
 deb http://mirrors.aliyun.com/ubuntu/ jammy main restricted universe multiverse
@@ -38,13 +30,6 @@ deb http://mirrors.aliyun.com/ubuntu/ jammy-updates main restricted universe mul
 deb http://mirrors.aliyun.com/ubuntu/ jammy-backports main restricted universe multiverse
 ```
 
-**Ubuntu 20.04 LTS (focal)**：
-```bash
-deb http://mirrors.aliyun.com/ubuntu/ focal main restricted universe multiverse
-deb http://mirrors.aliyun.com/ubuntu/ focal-security main restricted universe multiverse
-deb http://mirrors.aliyun.com/ubuntu/ focal-updates main restricted universe multiverse
-deb http://mirrors.aliyun.com/ubuntu/ focal-backports main restricted universe multiverse
-```
 
 ### 1.4 更新软件包列表
 ```bash
@@ -65,20 +50,8 @@ sudo apt install podman
 podman --version
 ```
 
-### 方法二：通过官方仓库安装（最新版本）
-```bash
-# 添加官方仓库
-echo "deb https://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/stable/xUbuntu_$(lsb_release -rs)/ /" | sudo tee /etc/apt/sources.list.d/devel:kubic:libcontainers:stable.list
 
-# 添加GPG密钥
-curl -fsSL https://download.opensuse.org/repositories/devel:kubic:libcontainers:stable/xUbuntu_$(lsb_release -rs)/Release.key | gpg --dearmor | sudo tee /etc/apt/trusted.gpg.d/devel_kubic_libcontainers_stable.gpg > /dev/null
-
-# 更新并安装
-sudo apt update
-sudo apt install podman
-```
-
-## 3. 配置阿里云镜像源
+## 3. 配置podman阿里云镜像源
 
 ### 3.1 备份原始配置（如果存在）
 ```bash
@@ -95,32 +68,7 @@ sudo nano /etc/containers/registries.conf
 ```
 
 ### 3.3 配置内容
-将以下内容写入 `/etc/containers/registries.conf`：
-
-```toml
-# 纯 v2 格式配置
-unqualified-search-registries = ["docker.io", "quay.io"]
-
-[[registry]]
-prefix = "docker.io"
-location = "docker.io"
-
-[[registry.mirror]]
-location = "registry.cn-hangzhou.aliyuncs.com"
-
-[[registry.mirror]]
-location = "registry.cn-shanghai.aliyuncs.com"
-
-[[registry.mirror]]
-location = "registry.cn-beijing.aliyuncs.com"
-
-[[registry]]
-prefix = "quay.io"
-location = "quay.io"
-
-[[registry.mirror]]
-location = "quay.mirrors.ustc.edu.cn"
-```
+见[registries.conf](../config/registries.conf)
 
 ## 4. 验证配置
 
@@ -138,22 +86,11 @@ podman pull ubuntu:22.04
 
 ## 5. 安装后配置（可选）
 
-### 5.1 启用用户命名空间
+### 替换docker命令,并开启自动补全
 ```bash
-# 如果遇到权限问题，可以启用用户命名空间
-echo 'user.max_user_namespaces=28633' | sudo tee -a /etc/sysctl.d/userns.conf
-
-# 重新加载sysctl配置
-sudo sysctl --system
-```
-
-### 5.2 用户级配置（可选）
-```bash
-# 创建用户配置目录
-mkdir -p ~/.config/containers
-
-# 复制配置到用户目录
-cp /etc/containers/registries.conf ~/.config/containers/registries.conf
+update-alternatives --install /usr/bin/docker docker /usr/bin/podman 100
+ln -s /usr/share/bash-completion/completions/podman /etc/bash_completion.d/podman
+. /etc/profile.d/bash_completion.sh 
 ```
 
 ## 6. 常见问题及解决方案
@@ -166,35 +103,6 @@ cp /etc/containers/registries.conf ~/.config/containers/registries.conf
 - 使用 `unqualified-search-registries` 而不是 `[registries.search]`
 - 避免混合 v1 和 v2 语法
 
-### 6.2 权限问题
-```bash
-# 将用户添加到相关组
-sudo usermod -a -G containers $USER
-
-# 重新登录生效
-```
-
-### 6.3 网络连接问题
-```bash
-# 如果镜像拉取失败，可以尝试不同的镜像源
-# 或者临时使用原始仓库
-podman pull docker.io/hello-world
-```
-
-## 7. Podman与Docker的兼容性
-
-### 7.1 命令别名（可选）
-```bash
-# 添加到 ~/.bashrc 或 ~/.zshrc
-echo 'alias docker=podman' >> ~/.bashrc
-source ~/.bashrc
-```
-
-### 7.2 兼容性说明
-- Podman完全兼容Docker Hub镜像
-- 支持Dockerfile构建
-- 命令语法与Docker高度相似
-- 无需守护进程，更安全
 
 ## 8. 测试命令
 
