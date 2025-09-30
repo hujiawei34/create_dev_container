@@ -11,4 +11,5 @@ podman pull crpi-qqo05szhq6ruqonk.cn-hangzhou.personal.cr.aliyuncs.com/hjw2727/d
 ```bash
 docker pull crpi-qqo05szhq6ruqonk.cn-hangzhou.personal.cr.aliyuncs.com/hjw2727/dev_container
 docker tag crpi-qqo05szhq6ruqonk.cn-hangzhou.personal.cr.aliyuncs.com/hjw2727/dev_container dev_container
+sudo docker pull swr.cn-east-3.myhuaweicloud.com/hujiawei2727/dev_container
 ```
